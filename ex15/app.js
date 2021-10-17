@@ -37,8 +37,8 @@ function setup(shaders)
     const vertices = [];
     const grid_spacing = 0.05;
 
-    for(let x = -table_width; x <= table_width; x += grid_spacing) {
-        for(let y = -table_height; y <= table_height; y += grid_spacing) {
+    for(let x = -table_width/2; x <= table_width/2; x += grid_spacing) {
+        for(let y = -table_height/2; y <= table_height/2; y += grid_spacing) {
             vertices.push(MV.vec2(x, y));
             count++;
         }
@@ -58,6 +58,7 @@ function setup(shaders)
         canvas.height = window.innerHeight;
         canvas.width = window.innerWidth;
         table_height = (canvas.height * table_width) / canvas.width;
+        gl.viewport(0, 0, canvas.width, canvas.height);
     });
     
     gl.viewport(0, 0, canvas.width, canvas.height);
