@@ -58,7 +58,14 @@ function setup(shaders)
         table_height = (canvas.height * table_width) / canvas.width;
         gl.viewport(0, 0, canvas.width, canvas.height);
     });
-    
+
+    canvas.addEventListener("click", function(event) {
+        // Start by getting x and y coordinates inside the canvas element
+        const x = (table_width * event.offsetX) / canvas.width - table_width/2;
+        const y = (-table_height * event.offsetY) / canvas.height + table_height/2;
+        console.log("Click at (" + x + ", " + y + ")");
+    });
+      
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     
