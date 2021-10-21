@@ -31,6 +31,7 @@ const ANGULAR_SPEED = 0.03;
 var theta = 0;
 const NEGATIVE = -1.0;
 const POSITIVE = 1.0;
+let isActive = true;
 
 function changePos(){
     let s = Math.sin(theta);
@@ -65,7 +66,8 @@ function animate()
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
     gl.uniform1f(widthloc, table_width);
     gl.uniform1f(heightloc, table_height);
-    gl.drawArrays(gl.POINTS, 0, charges.length);
+    if(isActive)
+        gl.drawArrays(gl.POINTS, 0, charges.length);
 }
 
 function setup(shaders)
@@ -119,6 +121,7 @@ function setup(shaders)
     });
 
     canvas.addEventListener("click", function(event) {
+        event.k
         const x = (table_width * event.offsetX) / canvas.width - table_width/2;
         const y = (-table_height * event.offsetY) / canvas.height + table_height/2;
         console.log("Click at (" + x + ", " + y + ")");
@@ -142,6 +145,11 @@ function setup(shaders)
         gl.uniform1i(nchargesloc, n_charges);
         console.log(charges);
     });
+
+    window.addEventListener("keydown", function(event){
+        if(event.keyCode == 32)
+            isActive = !isActive;
+    })
       
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
