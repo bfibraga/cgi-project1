@@ -15,7 +15,6 @@ var eletric_new_point = [];
 //Uniform Locations
 var widthloc;
 var heightloc;
-var colorloc;
 var rotationloc;
 var translationloc;
 var nchargesloc;
@@ -31,6 +30,9 @@ const ANGULAR_SPEED = 0.025;
 var theta = 0;
 const NEGATIVE = -1.0;
 const POSITIVE = 1.0;
+const POSITIVE_COLOR = [0.0,1.0,0.0,1.0];
+const NEGATIVE_COLOR = [1.0,0.0,0.0,1.0];
+var colors = [];
 
 
 function animate()
@@ -42,17 +44,15 @@ function animate()
     gl.useProgram(program_charges);
 
     theta += ANGULAR_SPEED;
-    rotation[0] = Math.sin(theta);
+    /*rotation[0] = Math.sin(theta);
     rotation[1] = Math.cos(theta);
-    gl.uniform2fv(rotationloc, rotation);
+    gl.uniform2fv(rotationloc, rotation);*/
     gl.uniform1f(thetaloc, theta);
     gl.uniform2fv(translationloc, [0.0,0.0]);
 
     gl.uniform1f(widthloc, table_width);
     gl.uniform1f(heightloc, table_height);
-    gl.uniform4fv(colorloc, [1.0, 1.0, 1.0, 1.0]);
     gl.drawArrays(gl.POINTS, 0, eletric_point.length);
-    gl.uniform4fv(colorloc, [0.0, 1.0, 0.0, 1.0]);
     gl.drawArrays(gl.POINTS, eletric_point.length, charges.length);
 }
 
@@ -71,11 +71,11 @@ function setup(shaders)
     
     widthloc = gl.getUniformLocation(program_charges, "table_width");
     heightloc = gl.getUniformLocation(program_charges, "table_height");
-    colorloc = gl.getUniformLocation(program_charges, "color");
     rotationloc = gl.getUniformLocation(program_charges, "uRotation");
     translationloc = gl.getUniformLocation(program_charges, "uTranslation");
     nchargesloc = gl.getUniformLocation(program_charges, "uSize");
     thetaloc = gl.getUniformLocation(program_charges, "uTheta");
+    colors = [POSITIVE_COLOR, NEGATIVE_COLOR];
     gl.uniform1i(nchargesloc, 0);
 
     const grid_spacing = 0.05;
@@ -108,13 +108,11 @@ function setup(shaders)
         const y = (-table_height * event.offsetY) / canvas.height + table_height/2;
         console.log("Click at (" + x + ", " + y + ")");
         if (event.shiftKey){
-            gl.uniform4fv(colorloc, [1.0,0.0,0.0,1.0]);
             var new_charge = MV.vec3(x,y,NEGATIVE);
             gl.bufferSubData(gl.ARRAY_BUFFER, eletric_point.length * MV.sizeof["vec2"]  + charges.length * MV.sizeof["vec3"],  MV.flatten(new_charge));
             charges.push(new_charge);
             console.log("Negative Charge added");
         } else {  
-            gl.uniform4fv(colorloc, [0.0,1.0,0.0,1.0]);  
             var new_charge = MV.vec3(x,y,POSITIVE);
             gl.bufferSubData(gl.ARRAY_BUFFER, eletric_point.length * MV.sizeof["vec2"]  + charges.length * MV.sizeof["vec3"],  MV.flatten(new_charge));
             charges.push(new_charge);
