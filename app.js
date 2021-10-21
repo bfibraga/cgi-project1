@@ -7,6 +7,8 @@ var program_charges;
 var program_eletric_field;
 const table_width = 3.0;
 let table_height;
+var pBuffer;
+var cBuffer;
 
 //Eletric Field
 var eletric_point = [];
@@ -24,16 +26,27 @@ var thetaloc;
 //Charges
 let charges = [];
 var n_charges = 0;
-const MAX = 20;
+const MAX = 40;
 var rotation = [0.0,1.0];
-const ANGULAR_SPEED = 0.025;
+const ANGULAR_SPEED = 0.001;
 var theta = 0;
 const NEGATIVE = -1.0;
 const POSITIVE = 1.0;
-const POSITIVE_COLOR = [0.0,1.0,0.0,1.0];
-const NEGATIVE_COLOR = [1.0,0.0,0.0,1.0];
-var colors = [];
 
+function changePos(theta){
+
+    let s = Math.sin(theta);
+    let c = Math.cos(theta);
+
+    for(let i = 0; i < charges.length; i++){
+        let rotation = MV.vec3( (charges[i][0] * c - charges[i][1] * s), charges[i][1] * c + charges[i][0] * s, charges[i][2]);
+        charges[i] = rotation;
+    }
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0,  MV.flatten(charges));
+
+}
 
 function animate()
 {
@@ -47,13 +60,18 @@ function animate()
     /*rotation[0] = Math.sin(theta);
     rotation[1] = Math.cos(theta);
     gl.uniform2fv(rotationloc, rotation);*/
-    gl.uniform1f(thetaloc, theta);
+    changePos(theta);
     gl.uniform2fv(translationloc, [0.0,0.0]);
 
+    gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
     gl.uniform1f(widthloc, table_width);
     gl.uniform1f(heightloc, table_height);
     gl.drawArrays(gl.POINTS, 0, eletric_point.length);
-    gl.drawArrays(gl.POINTS, eletric_point.length, charges.length);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+    gl.uniform1f(widthloc, table_width);
+    gl.uniform1f(heightloc, table_height);
+    gl.drawArrays(gl.POINTS, 0, charges.length);
 }
 
 function setup(shaders)
@@ -75,7 +93,6 @@ function setup(shaders)
     translationloc = gl.getUniformLocation(program_charges, "uTranslation");
     nchargesloc = gl.getUniformLocation(program_charges, "uSize");
     thetaloc = gl.getUniformLocation(program_charges, "uTheta");
-    colors = [POSITIVE_COLOR, NEGATIVE_COLOR];
     gl.uniform1i(nchargesloc, 0);
 
     const grid_spacing = 0.05;
@@ -88,8 +105,13 @@ function setup(shaders)
 
     const pBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, eletric_new_point.length*MV.sizeof["vec2"] + eletric_point.length*MV.sizeof["vec2"] + MAX*MV.sizeof["vec3"], gl.STATIC_DRAW)
+    gl.bufferData(gl.ARRAY_BUFFER, eletric_new_point.length*MV.sizeof["vec2"] + eletric_point.length*MV.sizeof["vec2"], gl.STATIC_DRAW)
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, MV.flatten(eletric_point));
+
+    const cBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, MAX*MV.sizeof["vec3"], gl.STATIC_DRAW)
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, MV.flatten(charges));
 
     const vPosition = gl.getAttribLocation(program_charges, "vPosition");
     gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
@@ -109,19 +131,22 @@ function setup(shaders)
         console.log("Click at (" + x + ", " + y + ")");
         if (event.shiftKey){
             var new_charge = MV.vec3(x,y,NEGATIVE);
-            gl.bufferSubData(gl.ARRAY_BUFFER, eletric_point.length * MV.sizeof["vec2"]  + charges.length * MV.sizeof["vec3"],  MV.flatten(new_charge));
+            gl.bufferSubData(gl.ARRAY_BUFFER, charges.length * MV.sizeof["vec3"],  MV.flatten(new_charge));
             charges.push(new_charge);
             console.log("Negative Charge added");
         } else {  
             var new_charge = MV.vec3(x,y,POSITIVE);
-            gl.bufferSubData(gl.ARRAY_BUFFER, eletric_point.length * MV.sizeof["vec2"]  + charges.length * MV.sizeof["vec3"],  MV.flatten(new_charge));
+            gl.bufferSubData(gl.ARRAY_BUFFER, charges.length * MV.sizeof["vec3"],  MV.flatten(new_charge));
             charges.push(new_charge);
             console.log("Positive Charge added");
         }
-        const uPosition = gl.getUniformLocation(program_charges, "uPosition[" + n_charges + "]");
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
+        const uPosition = gl.getUniformLocation(program_eletric_field, "uPosition[" + n_charges + "]");
         gl.uniform2fv(uPosition, MV.flatten(new_charge));
         n_charges += 1;
         gl.uniform1i(nchargesloc, n_charges);
+        console.log(charges);
     });
       
     gl.viewport(0, 0, canvas.width, canvas.height);
