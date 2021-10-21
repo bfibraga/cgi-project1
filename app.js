@@ -103,12 +103,12 @@ function setup(shaders)
         }
     }*/
 
-    const pBuffer = gl.createBuffer();
+    pBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, eletric_new_point.length*MV.sizeof["vec2"] + eletric_point.length*MV.sizeof["vec2"], gl.STATIC_DRAW)
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, MV.flatten(eletric_point));
 
-    const cBuffer = gl.createBuffer();
+    cBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, MAX*MV.sizeof["vec3"], gl.STATIC_DRAW)
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, MV.flatten(charges));
@@ -129,6 +129,7 @@ function setup(shaders)
         const x = (table_width * event.offsetX) / canvas.width - table_width/2;
         const y = (-table_height * event.offsetY) / canvas.height + table_height/2;
         console.log("Click at (" + x + ", " + y + ")");
+        gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
         if (event.shiftKey){
             var new_charge = MV.vec3(x,y,NEGATIVE);
             gl.bufferSubData(gl.ARRAY_BUFFER, charges.length * MV.sizeof["vec3"],  MV.flatten(new_charge));
