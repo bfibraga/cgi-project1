@@ -27,25 +27,22 @@ var thetaloc;
 let charges = [];
 var n_charges = 0;
 const MAX = 40;
-var rotation = [0.0,1.0];
-const ANGULAR_SPEED = 0.001;
+const ANGULAR_SPEED = 0.03;
 var theta = 0;
 const NEGATIVE = -1.0;
 const POSITIVE = 1.0;
 
-function changePos(theta){
-
+function changePos(){
     let s = Math.sin(theta);
     let c = Math.cos(theta);
 
     for(let i = 0; i < charges.length; i++){
-        let rotation = MV.vec3( (charges[i][0] * c - charges[i][1] * s), charges[i][1] * c + charges[i][0] * s, charges[i][2]);
+        let rotation = MV.vec3(charges[i][0] * c - charges[i][2] * charges[i][1] * s, charges[i][1] * c + charges[i][2] * charges[i][0] * s, charges[i][2]);
         charges[i] = rotation;
     }
 
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
     gl.bufferSubData(gl.ARRAY_BUFFER, 0,  MV.flatten(charges));
-
 }
 
 function animate()
@@ -56,11 +53,8 @@ function animate()
 
     gl.useProgram(program_charges);
 
-    theta += ANGULAR_SPEED;
-    /*rotation[0] = Math.sin(theta);
-    rotation[1] = Math.cos(theta);
-    gl.uniform2fv(rotationloc, rotation);*/
-    changePos(theta);
+    theta = ANGULAR_SPEED;
+    changePos();
     gl.uniform2fv(translationloc, [0.0,0.0]);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
@@ -125,7 +119,6 @@ function setup(shaders)
     });
 
     canvas.addEventListener("click", function(event) {
-        // Start by getting x and y coordinates inside the canvas element
         const x = (table_width * event.offsetX) / canvas.width - table_width/2;
         const y = (-table_height * event.offsetY) / canvas.height + table_height/2;
         console.log("Click at (" + x + ", " + y + ")");
