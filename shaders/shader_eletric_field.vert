@@ -1,8 +1,10 @@
 attribute vec4 vPosition;
 const int MAX_CHARGES=20;
-uniform vec2 uPosition[MAX_CHARGES];
+uniform vec3 uPosition[MAX_CHARGES];
 uniform float uChargeValues[MAX_CHARGES];
 uniform int uSize;
+
+const float KE = 8.988e9;
 
 varying vec4 fColor;
 

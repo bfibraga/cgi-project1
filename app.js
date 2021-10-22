@@ -35,7 +35,9 @@ const MAX = 40;
 const ANGULAR_SPEED = 0.01;
 const POSITIVE = 1.0;
 let isActive = true;
+const CHARGE_VALUE = 2.0;
 
+//Aplication keycodes
 const key = {
     "Space": 32
 }
@@ -54,7 +56,7 @@ function drawLine(pos){
 function drawEletricField(){
     gl.useProgram(program_eletric_field);
     gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
-    
+
     const vPositionEletric = gl.getAttribLocation(program_eletric_field, "vPosition");
     gl.vertexAttribPointer(vPositionEletric, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vPositionEletric);
@@ -62,6 +64,14 @@ function drawEletricField(){
     //gl.bufferSubData(gl.ARRAY_BUFFER, 0, MV.flatten(eletric_point));
     gl.uniform1f(widthloc_eletric, table_width);
     gl.uniform1f(heightloc_eletric, table_height);
+
+    for(let i=0; i<charges.length; i++) {
+        const uPositionCharges = gl.getUniformLocation(program_eletric_field, "uPosition[" + i + "]");
+        gl.uniform3fv(uPositionCharges, MV.flatten(charges[i]));
+        const uValueCharge = gl.getUniformLocation(program_eletric_field, "uValue[" + i + "]");
+        gl.uniform1f(uValueCharge, charges[i][2]*CHARGE_VALUE);
+    }
+
     gl.drawArrays(gl.POINTS, 0, eletric_point.length);
 }
 
@@ -108,6 +118,7 @@ function animate()
 
 function setup(shaders)
 {
+    
     const canvas = document.getElementById("gl-canvas");
     gl = UTILS.setupWebGL(canvas);
 
@@ -136,9 +147,11 @@ function setup(shaders)
     pBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
 
+    //Criação da tabela do campo eletrico
+    const grid_offset = grid_spacing/2.0;
     for(let x = -table_width/2; x <= table_width/2; x += grid_spacing) {
         for(let y = -table_height/2; y <= table_height/2; y += grid_spacing) {
-            eletric_point.push(MV.vec2(x+grid_spacing/2.0, y+grid_spacing/2.0));
+            eletric_point.push(MV.vec2(x + grid_offset, y + grid_offset));
         }
     }
 
@@ -171,13 +184,6 @@ function setup(shaders)
             charges.push(new_charge);
             console.log("Positive Charge added");
         }
-
-        //gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
-        const uPosition = gl.getUniformLocation(program_eletric_field, "uPosition[" + n_charges + "]");
-        gl.uniform2fv(uPosition, MV.flatten(new_charge));
-        n_charges += 1;
-        gl.uniform1i(nchargesloc, n_charges);
-        console.log(charges);
     });
 
     window.addEventListener("keydown", function(event){
