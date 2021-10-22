@@ -9,7 +9,7 @@ void main()
 {
     vec2 resolution = vec2(table_width, table_height);
 
-    gl_PointSize = 5.0;
+    gl_PointSize = 6.0;
     vec4 conversion = vec4(resolution.x/2.0, resolution.y/2.0, 1.0, 1.0);
     gl_Position = vPosition / conversion;
 

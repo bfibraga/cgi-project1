@@ -1,10 +1,11 @@
 attribute vec4 vPosition;
-const int MAX_CHARGES=20;
-uniform vec2 uPosition[MAX_CHARGES];
-uniform float uChargeValues[MAX_CHARGES];
 uniform int uSize;
-
 varying vec4 fColor;
+
+const int MAX_CHARGES=20;
+uniform vec3 uPositionCharges[MAX_CHARGES];
+uniform float uChargeValues[MAX_CHARGES];
+const float KE = 8.988e9;
 
 uniform float table_width;
 uniform float table_height;
@@ -32,12 +33,21 @@ vec4 colorize(vec2 f)
     return vec4(angle_to_hue(a-TWOPI), 1.);
 }
 
+float calculate_field (){
+    float result = 0.0;
+    for(int i = 0; i < MAX_CHARGES; i++){
+        float distance = sqrt(pow(vPosition.x - uPositionCharges[i].x, 2.0) + pow(vPosition.y - uPositionCharges[i].y, 2.0));
+        result += KE * uChargeValues[i] / (distance * distance);
+    }
+    return result;
+}
+
 void main(){
     vec2 resolution = vec2(table_width, table_height);
     vec4 conversion = vec4(resolution.x/2.0, resolution.y/2.0, 1.0, 1.0);
     int size = uSize;
     
-    fColor = colorize(vec2(vPosition.x, vPosition.y));
+    fColor = colorize(vec2(vPosition.x,vPosition.y));
     gl_PointSize = 4.0;
     gl_Position = vPosition / conversion;
 }
