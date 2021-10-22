@@ -16,9 +16,12 @@ const grid_spacing = 0.05;
 
 
 //Uniform Locations
+//Charges
 var widthloc_charges;
 var heightloc_charges;
  
+
+//Eletric Field
 var widthloc_eletric;
 var heightloc_eletric;
 
@@ -29,7 +32,7 @@ var eletric_loc = [];
 let charges = [];
 var n_charges = 0;
 const MAX = 40;
-const ANGULAR_SPEED = 0.03;
+const ANGULAR_SPEED = 0.01;
 const POSITIVE = 1.0;
 let isActive = true;
 
@@ -37,7 +40,42 @@ const key = {
     "Space": 32
 }
 
-function changePos(){
+/**
+ * 
+ * @param {vec2} pos 
+ */
+function drawLine(pos){
+
+}
+
+/**
+ * 
+ */
+function drawEletricField(){
+    gl.useProgram(program_eletric_field);
+    gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
+    
+    const vPositionEletric = gl.getAttribLocation(program_eletric_field, "vPosition");
+    gl.vertexAttribPointer(vPositionEletric, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vPositionEletric);
+    
+    //gl.bufferSubData(gl.ARRAY_BUFFER, 0, MV.flatten(eletric_point));
+    gl.uniform1f(widthloc_eletric, table_width);
+    gl.uniform1f(heightloc_eletric, table_height);
+    gl.drawArrays(gl.POINTS, 0, eletric_point.length);
+}
+
+/**
+ * 
+ */
+function drawCharges(){
+    gl.useProgram(program_charges);
+    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+
+    const vPositionCharges = gl.getAttribLocation(program_charges, "vPosition");
+    gl.vertexAttribPointer(vPositionCharges, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vPositionCharges);
+
     let s = Math.sin(ANGULAR_SPEED);
     let c = Math.cos(ANGULAR_SPEED);
 
@@ -46,9 +84,13 @@ function changePos(){
         charges[i] = rotation;
         gl.uniform1i(nchargesloc, charges.length);
     }
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+    gl.uniform1f(widthloc_charges, table_width);
+    gl.uniform1f(heightloc_charges, table_height);
     gl.bufferSubData(gl.ARRAY_BUFFER, 0,  MV.flatten(charges));
+
+    if(isActive){
+        gl.drawArrays(gl.POINTS, 0, charges.length);
+    }
 }
 
 function animate()
@@ -57,26 +99,11 @@ function animate()
 
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
-
-    gl.useProgram(program_charges);
-
-    changePos();
+    drawEletricField();
+    drawCharges();
+    
     //gl.uniform1i(nchargesloc, 0);
     
-    gl.uniform1f(widthloc_charges, table_width);
-    gl.uniform1f(heightloc_charges, table_height);
-    if(isActive){
-        gl.drawArrays(gl.POINTS, 0, charges.length);
-    }
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
-    gl.bufferSubData(gl.ARRAY_BUFFER, 0, MV.flatten(eletric_point));
-    gl.useProgram(program_eletric_field);
-    gl.uniform1f(widthloc_eletric, table_width);
-    gl.uniform1f(heightloc_eletric, table_height);
-    gl.drawArrays(gl.POINTS, 0, eletric_point.length);
-
 }
 
 function setup(shaders)
@@ -84,26 +111,28 @@ function setup(shaders)
     const canvas = document.getElementById("gl-canvas");
     gl = UTILS.setupWebGL(canvas);
 
+    //Criação dos programas
     program_charges = UTILS.buildProgramFromSources(gl, shaders["shader_charges.vert"], shaders["shader_charges.frag"]);
     program_eletric_field = UTILS.buildProgramFromSources(gl, shaders["shader_eletric_field.vert"], shaders["shader_eletric_field.frag"]);
 
+    //Alteração Inicial do elemento html canvas
     canvas.height = window.innerHeight;
     canvas.width = window.innerWidth;
 
+    //Corrigir a altura da table de acordo com o canvas e o comprimento da tabela
     table_height = (canvas.height * table_width) / canvas.width;
     
+    //Criação do buffer das cargas
     cBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, MAX*(MV.sizeof["vec3"] + MV.sizeof["vec4"]), gl.STATIC_DRAW)
 
+    //Atualzação dos valores dos uniform's do programa "program_charges"
     widthloc_charges = gl.getUniformLocation(program_charges, "table_width");
     heightloc_charges = gl.getUniformLocation(program_charges, "table_height");
     nchargesloc = gl.getUniformLocation(program_charges, "uSize");
 
-    const vPositionCharges = gl.getAttribLocation(program_charges, "vPosition");
-    gl.vertexAttribPointer(vPositionCharges, 3, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vPositionCharges);
-
+    //Criação do buffer do campo eletrico
     pBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
 
@@ -115,10 +144,6 @@ function setup(shaders)
 
     gl.bufferData(gl.ARRAY_BUFFER, eletric_point.length*(MV.sizeof["vec2"] + MV.sizeof["vec4"]), gl.STATIC_DRAW)
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, MV.flatten(eletric_point));
-
-    const vPositionEletric = gl.getAttribLocation(program_eletric_field, "vPosition");
-    gl.vertexAttribPointer(vPositionEletric, 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vPositionEletric);
 
     widthloc_eletric = gl.getUniformLocation(program_eletric_field, "table_width");
     heightloc_eletric = gl.getUniformLocation(program_eletric_field, "table_height");
