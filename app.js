@@ -11,31 +11,25 @@ var pBuffer;
 var cBuffer;
 
 //Eletric Field
-var eletric_point = [];
+var static_eletric_point = [];
 const grid_spacing = 0.05;
-
+var widthloc_eletric;
+var heightloc_eletric;
 
 //Uniform Locations
 //Charges
 var widthloc_charges;
 var heightloc_charges;
- 
 
-//Eletric Field
-var widthloc_eletric;
-var heightloc_eletric;
-
-var nchargesloc;
-var eletric_loc = [];
 
 //Charges
 let charges = [];
-var n_charges = 0;
-const MAX_CHARGES = 20;
+const MAX_CHARGES = 50;
 const ANGULAR_SPEED = 0.01;
+const NEGATIVE = -1.0;
 const POSITIVE = 1.0;
 let isActive = true;
-const CHARGE_VALUE = 2.0;
+const CHARGE_VALUE = 5.0;
 
 const key = {
     "Space": 32
@@ -57,20 +51,20 @@ function drawEletricField(){
     gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
     
     const vPositionEletric = gl.getAttribLocation(program_eletric_field, "vPosition");
-    gl.vertexAttribPointer(vPositionEletric, 2, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(vPositionEletric, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vPositionEletric);
 
     for(let i=0; i<charges.length; i++) {
         const uPosition = gl.getUniformLocation(program_eletric_field, "uPositionCharges[" + i + "]");
-        gl.uniform3fv(uPosition, MV.flatten(charges[i]));
+        gl.uniform3fv(uPosition, charges[i]);
         const uCharge = gl.getUniformLocation(program_eletric_field, "uChargeValues[" + i + "]");
-        gl.uniform3fv(uCharge, MV.flatten(charges[i][2] * CHARGE_VALUE));
+        gl.uniform1f(uCharge, charges[i][2] * CHARGE_VALUE);
     }
     
     //gl.bufferSubData(gl.ARRAY_BUFFER, 0, MV.flatten(eletric_point));
     gl.uniform1f(widthloc_eletric, table_width);
     gl.uniform1f(heightloc_eletric, table_height);
-    gl.drawArrays(gl.POINTS, 0, eletric_point.length);
+    gl.drawArrays(gl.LINES, 0, static_eletric_point.length);
 }
 
 /**
@@ -90,7 +84,6 @@ function drawCharges(){
     for(let i = 0; i < charges.length; i++){
         let rotation = MV.vec3(charges[i][0] * c - charges[i][2] * charges[i][1] * s, charges[i][1] * c + charges[i][2] * charges[i][0] * s, charges[i][2]);
         charges[i] = rotation;
-        gl.uniform1i(nchargesloc, charges.length);
     }
     gl.uniform1f(widthloc_charges, table_width);
     gl.uniform1f(heightloc_charges, table_height);
@@ -138,7 +131,6 @@ function setup(shaders)
     //Atualzação dos valores dos uniform's do programa "program_charges"
     widthloc_charges = gl.getUniformLocation(program_charges, "table_width");
     heightloc_charges = gl.getUniformLocation(program_charges, "table_height");
-    nchargesloc = gl.getUniformLocation(program_charges, "uSize");
 
     //Criação do buffer do campo eletrico
     pBuffer = gl.createBuffer();
@@ -147,12 +139,17 @@ function setup(shaders)
     const grid_offset = grid_spacing / 2.0;
     for(let x = -table_width/2; x <= table_width/2; x += grid_spacing) {
         for(let y = -table_height/2; y <= table_height/2; y += grid_spacing) {
-            eletric_point.push(MV.vec2(x + grid_offset, y + grid_offset));
+            const curr_x = x + grid_offset;
+            const curr_y = y + grid_offset;
+            static_eletric_point.push(MV.vec3(curr_x, curr_y, 0.0));
+            static_eletric_point.push(MV.vec3(curr_x, curr_y, 1.0));
         }
     }
 
-    gl.bufferData(gl.ARRAY_BUFFER, eletric_point.length*(MV.sizeof["vec2"] + MV.sizeof["vec4"]), gl.STATIC_DRAW)
-    gl.bufferSubData(gl.ARRAY_BUFFER, 0, MV.flatten(eletric_point));
+    console.log(static_eletric_point);
+
+    gl.bufferData(gl.ARRAY_BUFFER, static_eletric_point.length*(MV.sizeof["vec3"] + MV.sizeof["vec4"]), gl.STATIC_DRAW)
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, MV.flatten(static_eletric_point));
 
     widthloc_eletric = gl.getUniformLocation(program_eletric_field, "table_width");
     heightloc_eletric = gl.getUniformLocation(program_eletric_field, "table_height");
@@ -170,7 +167,7 @@ function setup(shaders)
             const y = (-table_height * event.offsetY) / canvas.height + table_height/2;
             gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
             if (event.shiftKey){
-                var new_charge = MV.vec3(x,y,-POSITIVE);
+                var new_charge = MV.vec3(x,y,NEGATIVE);
                 gl.bufferSubData(gl.ARRAY_BUFFER, MV.sizeof["vec3"],  MV.flatten(new_charge));
                 charges.push(new_charge);
                 console.log("Negative Charge added");
