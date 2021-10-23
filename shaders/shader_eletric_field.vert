@@ -6,6 +6,7 @@ uniform vec3 uPositionCharges[MAX_CHARGES];
 uniform float uChargeValues[MAX_CHARGES];
 const float KE = 8.988 * pow(10.0, 9.0);
 const float MAX_LINE_LENGTH=0.09;
+uniform int uIsColorized;
 
 uniform float table_width;
 uniform float table_height;
@@ -42,7 +43,6 @@ vec2 calculate_intensity_field (){
         vec2 direction = vec2(vPosition.x - uPositionCharges[i].x, vPosition.y - uPositionCharges[i].y);
         float intensity = KE * uChargeValues[i] / (distance * distance);
         result += vec2(intensity, intensity) * normalize(direction);
-        
     }
 
     if (length(result) > MAX_LINE_LENGTH){
@@ -51,7 +51,12 @@ vec2 calculate_intensity_field (){
         result.y *= MAX_LINE_LENGTH;
     }
 
-    fColor = colorize(result);
+    float color_intensity = length(result)/MAX_LINE_LENGTH;
+    
+    vec4 final_color = colorize(normalize(result));
+    fColor = uIsColorized == 1 ? vec4(final_color.x*color_intensity,final_color.y*color_intensity,final_color.z*color_intensity, 1.0)
+                             : vec4(color_intensity,color_intensity,color_intensity,1.0);
+    
 
     return result;
 }
@@ -71,7 +76,6 @@ void main(){
     } else {
         fColor= vec4(0.0,0.0,0.0,1.0);
     }
-    
     
     gl_Position = (vPosition + direction_result) / conversion ;
 }

@@ -15,24 +15,27 @@ var static_eletric_point = [];
 const grid_spacing = 0.05;
 var widthloc_eletric;
 var heightloc_eletric;
-
-//Uniform Locations
-//Charges
-var widthloc_charges;
-var heightloc_charges;
+var isColorized = true;
+var isColorizedloc;
 
 
 //Charges
 let charges = [];
 const MAX_CHARGES = 50;
+var widthloc_charges;
+var heightloc_charges;
+var charge_resolution_loc;
 const ANGULAR_SPEED = 0.01;
 const NEGATIVE = -1.0;
 const POSITIVE = 1.0;
 let isActive = true;
-const CHARGE_VALUE = 0.000000000001;
+var CHARGE_VALUE = 10e-12;
 
 const key = {
-    "Space": 32
+    "Space": 32,
+    "c": 67,
+    "+": 107,
+    "-": 109
 }
 
 function randomFromInterval(min, max) { // min and max included 
@@ -60,6 +63,8 @@ function drawEletricField(){
     //gl.bufferSubData(gl.ARRAY_BUFFER, 0, MV.flatten(eletric_point));
     gl.uniform1f(widthloc_eletric, table_width);
     gl.uniform1f(heightloc_eletric, table_height);
+    var colorized_int = isColorized ? 1 : 0;
+    gl.uniform1i(isColorizedloc, colorized_int);
     gl.drawArrays(gl.LINES, 0, static_eletric_point.length);
 }
 
@@ -83,6 +88,7 @@ function drawCharges(){
     }
     gl.uniform1f(widthloc_charges, table_width);
     gl.uniform1f(heightloc_charges, table_height);
+    gl.uniform2fv(charge_resolution_loc, MV.vec2(20,20));
     gl.bufferSubData(gl.ARRAY_BUFFER, 0,  MV.flatten(charges));
 
     if(isActive){
@@ -127,6 +133,7 @@ function setup(shaders)
     //Atualzação dos valores dos uniform's do programa "program_charges"
     widthloc_charges = gl.getUniformLocation(program_charges, "table_width");
     heightloc_charges = gl.getUniformLocation(program_charges, "table_height");
+    charge_resolution_loc = gl.getUniformLocation(program_charges, "uResolution");
 
     //Criação do buffer do campo eletrico
     pBuffer = gl.createBuffer();
@@ -151,6 +158,7 @@ function setup(shaders)
 
     widthloc_eletric = gl.getUniformLocation(program_eletric_field, "table_width");
     heightloc_eletric = gl.getUniformLocation(program_eletric_field, "table_height");
+    isColorizedloc = gl.getUniformLocation(program_eletric_field, "uIsColorized");
 
     window.addEventListener("resize", function (event) {
         canvas.height = window.innerHeight;
@@ -179,8 +187,23 @@ function setup(shaders)
     });
 
     window.addEventListener("keydown", function(event){
-        if(event.keyCode == key["Space"])
-            isActive = !isActive;
+        switch(event.keyCode){
+            //Toggle visibility of the charges
+            case key["Space"]:
+                isActive = !isActive;
+                break;
+            //Toggle color filter
+            case key["c"]:
+                isColorized = !isColorized;
+                break;
+            case key["+"]:
+                CHARGE_VALUE += 0.0000000000025;
+                break;
+            case key["-"]:
+                CHARGE_VALUE -= 0.0000000000025;
+                break;
+        }
+        console.log(CHARGE_VALUE);
     })
       
     gl.viewport(0, 0, canvas.width, canvas.height);
