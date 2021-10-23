@@ -2,7 +2,6 @@ precision highp float;
 varying vec4 fColor;
 
 #define POSITIVE_COLOR vec4(0.0,1.0,0.0,1.0)
-#define NEGATIVE_COLOR vec4(1.0,0.0,0.0,1.0)
 
 float inSignal(vec2 position, vec2 top_limit, vec2 bottom_limit){
     return position.x > bottom_limit.x && position.y > bottom_limit.y && position.x < top_limit.x && position.y < top_limit.y ? 0.0 : 1.0;
@@ -33,5 +32,5 @@ vec4 drawCharge(vec2 position, vec4 color, float inner_radious, float out_radiou
 
 void main() {
     vec2 fragmentPosition = 2.0*gl_PointCoord - 1.0;
-    gl_FragColor = drawCharge(fragmentPosition, fColor, 0.5, 1.0);
+    gl_FragColor = drawCharge(fragmentPosition, fColor, 1.0, 1.0);
 }

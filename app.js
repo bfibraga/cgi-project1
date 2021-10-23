@@ -44,9 +44,6 @@ function randomFromInterval(min, max) { // min and max included
     return Math.random() * (max - min) + min;
 }
 
-/**
- * 
- */
 function drawEletricField(){
     gl.useProgram(program_eletric_field);
     gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
@@ -62,7 +59,6 @@ function drawEletricField(){
         gl.uniform1f(uCharge, charges[i][2] * CHARGE_VALUE);
     }
     
-    //gl.bufferSubData(gl.ARRAY_BUFFER, 0, MV.flatten(eletric_point));
     gl.uniform1f(widthloc_eletric, table_width);
     gl.uniform1f(heightloc_eletric, table_height);
     var colorized_int = isColorized ? 1 : 0;
@@ -70,9 +66,6 @@ function drawEletricField(){
     gl.drawArrays(gl.LINES, 0, static_eletric_point.length);
 }
 
-/**
- * 
- */
 function drawCharges(){
     gl.useProgram(program_charges);
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
@@ -110,9 +103,6 @@ function animate()
 
     drawEletricField();
     drawCharges();
-    
-    //gl.uniform1i(nchargesloc, 0);
-    
 }
 
 function setup(shaders)
@@ -120,28 +110,28 @@ function setup(shaders)
     const canvas = document.getElementById("gl-canvas");
     gl = UTILS.setupWebGL(canvas);
 
-    //Criação dos programas
+    //Create programs
     program_charges = UTILS.buildProgramFromSources(gl, shaders["shader_charges.vert"], shaders["shader_charges.frag"]);
     program_eletric_field = UTILS.buildProgramFromSources(gl, shaders["shader_eletric_field.vert"], shaders["shader_eletric_field.frag"]);
 
-    //Alteração Inicial do elemento html canvas
+    //Initial setup of the html element canvas
     canvas.height = window.innerHeight;
     canvas.width = window.innerWidth;
 
-    //Corrigir a altura da table de acordo com o canvas e o comprimento da tabela
+    //Setup the table height in order of the canvas and the table width
     table_height = (canvas.height * table_width) / canvas.width;
     
-    //Criação do buffer das cargas
+    //Creates the charges buffer
     cBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, MAX_CHARGES*(MV.sizeof["vec3"] + MV.sizeof["vec4"]), gl.STATIC_DRAW)
 
-    //Atualzação dos valores dos uniform's do programa "program_charges"
+    //Updates the values of the "program_charges"'s uniforms
     widthloc_charges = gl.getUniformLocation(program_charges, "table_width");
     heightloc_charges = gl.getUniformLocation(program_charges, "table_height");
     charge_resolution_loc = gl.getUniformLocation(program_charges, "uResolution");
 
-    //Criação do buffer do campo eletrico
+    //Creates the electric field buffer
     pBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
 
@@ -202,12 +192,14 @@ function setup(shaders)
             case key["c"]:
                 isColorized = !isColorized;
                 break;
+            //Change charge value
             case key["+"]:
                 CHARGE_VALUE += 0.0000000000025;
                 break;
             case key["-"]:
                 CHARGE_VALUE -= 0.0000000000025;
                 break;
+            //Change charge speed
             case key["w"]:
                 ANGULAR_SPEED += 1e-2;
                 break;
