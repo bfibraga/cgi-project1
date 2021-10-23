@@ -25,7 +25,7 @@ const MAX_CHARGES = 50;
 var widthloc_charges;
 var heightloc_charges;
 var charge_resolution_loc;
-const ANGULAR_SPEED = 0.01;
+var ANGULAR_SPEED = 0.01;
 const NEGATIVE = -1.0;
 const POSITIVE = 1.0;
 let isActive = true;
@@ -35,7 +35,9 @@ const key = {
     "Space": 32,
     "c": 67,
     "+": 107,
-    "-": 109
+    "-": 109,
+    "w": 87,
+    "s": 83
 }
 
 function randomFromInterval(min, max) { // min and max included 
@@ -78,6 +80,10 @@ function drawCharges(){
     const vPositionCharges = gl.getAttribLocation(program_charges, "vPosition");
     gl.vertexAttribPointer(vPositionCharges, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vPositionCharges);
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.blendColor(0.0,0.0,0.0,0.0);
 
     let s = Math.sin(ANGULAR_SPEED);
     let c = Math.cos(ANGULAR_SPEED);
@@ -201,6 +207,12 @@ function setup(shaders)
                 break;
             case key["-"]:
                 CHARGE_VALUE -= 0.0000000000025;
+                break;
+            case key["w"]:
+                ANGULAR_SPEED += 1e-2;
+                break;
+            case key["s"]:
+                ANGULAR_SPEED -= 1e-2;
                 break;
         }
         console.log(CHARGE_VALUE);
