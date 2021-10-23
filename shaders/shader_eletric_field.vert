@@ -68,8 +68,8 @@ void main(){
     vec4 direction_result = VEC4ZERO;
 
     //Verificar se carga movivel ou carga estatica
-    //1- Mobile
-    //0- Static
+    //1.0 - Mobile
+    //0.0 - Static
     if (vPosition.z == 1.0){
         vec2 intensity = calculate_intensity_field();
         direction_result = vec4(intensity.x, intensity.y, 0.0, 0.0);

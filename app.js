@@ -31,6 +31,7 @@ const POSITIVE = 1.0;
 let isActive = true;
 var CHARGE_VALUE = 10e-12;
 
+//Keycodes
 const key = {
     "Space": 32,
     "c": 67,
@@ -40,18 +41,30 @@ const key = {
     "s": 83
 }
 
+/**
+ * Random float number between min and max float.
+ * @param {float} min 
+ * @param {float} max 
+ * @returns 
+ */
 function randomFromInterval(min, max) { // min and max included 
     return Math.random() * (max - min) + min;
 }
 
+/**
+ * Function that draws the eletric field.
+ */
 function drawEletricField(){
+    //Using the dedicated eletric field program and binding the buffer
     gl.useProgram(program_eletric_field);
     gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
     
+    //Setup the attribute to draw.
     const vPositionEletric = gl.getAttribLocation(program_eletric_field, "vPosition");
     gl.vertexAttribPointer(vPositionEletric, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vPositionEletric);
 
+    //Pushing the charges and it's value to eletric field vertex shader.
     for(let i=0; i<charges.length; i++) {
         const uPosition = gl.getUniformLocation(program_eletric_field, "uPositionCharges[" + i + "]");
         gl.uniform3fv(uPosition, charges[i]);
@@ -59,25 +72,32 @@ function drawEletricField(){
         gl.uniform1f(uCharge, charges[i][2] * CHARGE_VALUE);
     }
     
+    //Setup all needed uniforms.
     gl.uniform1f(widthloc_eletric, table_width);
     gl.uniform1f(heightloc_eletric, table_height);
     var colorized_int = isColorized ? 1 : 0;
     gl.uniform1i(isColorizedloc, colorized_int);
+
+    //Draw the eletric field vectors/lines.
     gl.drawArrays(gl.LINES, 0, static_eletric_point.length);
 }
 
 function drawCharges(){
+    //Using the dedicated echarges program and binding the buffer
     gl.useProgram(program_charges);
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
 
+    //Setup the attribute to draw.
     const vPositionCharges = gl.getAttribLocation(program_charges, "vPosition");
     gl.vertexAttribPointer(vPositionCharges, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vPositionCharges);
 
+    //Enable color blend
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.blendColor(0.0,0.0,0.0,0.0);
 
+    //Calculate rotation of the charges
     let s = Math.sin(ANGULAR_SPEED);
     let c = Math.cos(ANGULAR_SPEED);
 
@@ -85,11 +105,14 @@ function drawCharges(){
         let rotation = MV.vec3(charges[i][0] * c - charges[i][2] * charges[i][1] * s, charges[i][1] * c + charges[i][2] * charges[i][0] * s, charges[i][2]);
         charges[i] = rotation;
     }
+
+    //Setup all needed uniforms.
     gl.uniform1f(widthloc_charges, table_width);
     gl.uniform1f(heightloc_charges, table_height);
     gl.uniform2fv(charge_resolution_loc, MV.vec2(20,20));
     gl.bufferSubData(gl.ARRAY_BUFFER, 0,  MV.flatten(charges));
 
+    //Draw the charges, if enabled.
     if(isActive){
         gl.drawArrays(gl.POINTS, 0, charges.length);
     }
@@ -126,7 +149,7 @@ function setup(shaders)
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, MAX_CHARGES*(MV.sizeof["vec3"] + MV.sizeof["vec4"]), gl.STATIC_DRAW)
 
-    //Updates the values of the "program_charges"'s uniforms
+    //Get the locations of the "program_charges"'s uniforms
     widthloc_charges = gl.getUniformLocation(program_charges, "table_width");
     heightloc_charges = gl.getUniformLocation(program_charges, "table_height");
     charge_resolution_loc = gl.getUniformLocation(program_charges, "uResolution");
@@ -135,6 +158,7 @@ function setup(shaders)
     pBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
 
+    //Initializes all eletric points needed to draw.
     const interval = grid_spacing/2.0;
     for(let x = -table_width/2; x <= table_width/2; x += grid_spacing) {
         for(let y = -table_height/2; y <= table_height/2; y += grid_spacing) {
@@ -147,15 +171,16 @@ function setup(shaders)
         }
     }
 
-    console.log(static_eletric_point);
-
+    //Updates the eletric field buffer
     gl.bufferData(gl.ARRAY_BUFFER, static_eletric_point.length*(MV.sizeof["vec3"] + MV.sizeof["vec4"]), gl.STATIC_DRAW)
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, MV.flatten(static_eletric_point));
 
+    //Get the locations of the "program_electric_field"'s uniforms
     widthloc_eletric = gl.getUniformLocation(program_eletric_field, "table_width");
     heightloc_eletric = gl.getUniformLocation(program_eletric_field, "table_height");
     isColorizedloc = gl.getUniformLocation(program_eletric_field, "uIsColorized");
 
+    //Event Handler that updates the browser's resolution.
     window.addEventListener("resize", function (event) {
         canvas.height = window.innerHeight;
         canvas.width = window.innerWidth;
@@ -163,6 +188,7 @@ function setup(shaders)
         gl.viewport(0, 0, canvas.width, canvas.height);
     });
 
+    //Event Handler that updates the creation of new charges.
     canvas.addEventListener("click", function(event) {
         if(charges.length != MAX_CHARGES){
             const x = (table_width * event.offsetX) / canvas.width - table_width/2;
@@ -182,6 +208,7 @@ function setup(shaders)
         }
     });
 
+    //Event Handler that tweak some aspects of the charges and eletric field.
     window.addEventListener("keydown", function(event){
         switch(event.keyCode){
             //Toggle visibility of the charges
@@ -192,24 +219,26 @@ function setup(shaders)
             case key["c"]:
                 isColorized = !isColorized;
                 break;
-            //Change charge value
+            //Increase charge value
             case key["+"]:
-                CHARGE_VALUE += 0.0000000000025;
+                CHARGE_VALUE += 25e-13;
                 break;
+            //Decrease charge value
             case key["-"]:
-                CHARGE_VALUE -= 0.0000000000025;
+                CHARGE_VALUE -= 25e-13;
                 break;
-            //Change charge speed
+            //Increase angular speed
             case key["w"]:
                 ANGULAR_SPEED += 1e-2;
                 break;
+            //Decrease angular speed
             case key["s"]:
-                ANGULAR_SPEED -= 1e-2;
+                ANGULAR_SPEED = ANGULAR_SPEED <= 0.0 ? 0.0 : ANGULAR_SPEED - 1e-2;
                 break;
         }
-        console.log(CHARGE_VALUE);
     })
       
+    //Updates the viewport and background color.
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     

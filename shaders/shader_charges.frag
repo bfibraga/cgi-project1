@@ -32,5 +32,5 @@ vec4 drawCharge(vec2 position, vec4 color, float inner_radious, float out_radiou
 
 void main() {
     vec2 fragmentPosition = 2.0*gl_PointCoord - 1.0;
-    gl_FragColor = drawCharge(fragmentPosition, fColor, 1.0, 1.0);
+    gl_FragColor = drawCharge(fragmentPosition, fColor, 0.99, 1.0);
 }
