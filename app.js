@@ -1,5 +1,5 @@
-import * as UTILS from '../../libs/utils.js';
-import * as MV from '../../libs/MV.js'
+import * as UTILS from './libs/utils.js';
+import * as MV from './libs/MV.js'
 
 /** @type {WebGLRenderingContext} */
 let gl;
